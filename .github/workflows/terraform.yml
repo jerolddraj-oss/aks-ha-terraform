@@ -19,27 +19,23 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # ✅ FIX ADDED HERE
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 0.13.7
 
       - name: Terraform Init
-<<<<<<< HEAD
-        run: terraform init
-=======
         run: |
-        terraform init \
-        -backend-config="key=aks-ha-dev.tfstate"
->>>>>>> 659b9dc (fix: backend tfstate config for terraform)
+          terraform init \
+            -backend-config="resource_group_name=tfstate-rg" \
+            -backend-config="storage_account_name=jdterraformstate" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=aks-ha-dev.tfstate"
 
       - name: Select Workspace
-        run: terraform workspace select dev || terraform workspace new dev
+        run: |
+          terraform workspace select dev || terraform workspace new dev
 
       - name: Terraform Apply
-<<<<<<< HEAD
-        run: terraform apply -auto-approve -var-file=env/dev.tfvars
-=======
-        run: terraform apply -auto-approve -var-file=env/dev.tfvars
->>>>>>> 659b9dc (fix: backend tfstate config for terraform)
+        run: |
+          terraform apply -auto-approve -var-file=env/dev.tfvars
