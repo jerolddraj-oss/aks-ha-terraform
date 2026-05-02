@@ -5,9 +5,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose action: apply or destroy"
+        required: true
+        default: "apply"
 
 jobs:
-  terraform:
+  terraform-apply:
+    if: github.event.inputs.action != 'destroy'
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +25,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # ✅ FIXED: Register AND WAIT for providers
       - name: Register Azure Providers
         run: |
           az provider register --namespace Microsoft.ContainerService
@@ -38,7 +43,6 @@ jobs:
             sleep 10
           done
 
-      # ✅ Export ARM variables for Terraform
       - name: Export ARM Credentials
         run: |
           echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
@@ -59,7 +63,6 @@ jobs:
             -backend-config="container_name=tfstate" \
             -backend-config="key=aks-ha-dev.tfstate"
 
-      # ✅ CLEAN workspace handling (no error logs)
       - name: Select or Create Workspace
         run: |
           if terraform workspace list | grep -q "dev"; then
@@ -69,5 +72,49 @@ jobs:
           fi
 
       - name: Terraform Apply
+        run: terraform apply -auto-approve -var-file=env/dev.tfvars
+
+# 🔴 DESTROY JOB (WITH APPROVAL)
+
+  terraform-destroy:
+    if: github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+
+    # 🔥 THIS ENABLES MANUAL APPROVAL
+    environment: 
+      name: production   # Configure approval in GitHub repo settings
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Export ARM Credentials
         run: |
-          terraform apply -auto-approve -var-file=env/dev.tfvars
+          echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=tfstate-rg" \
+            -backend-config="storage_account_name=jdterraformstate" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=aks-ha-dev.tfstate"
+
+      - name: Select Workspace
+        run: terraform workspace select dev
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -var-file=env/dev.tfvars
