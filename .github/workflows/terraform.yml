@@ -12,8 +12,10 @@ on:
         default: "apply"
 
 jobs:
+
+  # 🟢 APPLY JOB
   terraform-apply:
-    if: github.event.inputs.action != 'destroy'
+    if: github.event_name == 'push' || github.event.inputs.action == 'apply'
     runs-on: ubuntu-latest
 
     steps:
@@ -74,15 +76,13 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve -var-file=env/dev.tfvars
 
-# 🔴 DESTROY JOB (WITH APPROVAL)
-
+  # 🔴 DESTROY JOB (MANUAL + APPROVAL)
   terraform-destroy:
-    if: github.event.inputs.action == 'destroy'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
     runs-on: ubuntu-latest
 
-    # 🔥 THIS ENABLES MANUAL APPROVAL
-    environment: 
-      name: production   # Configure approval in GitHub repo settings
+    environment:
+      name: production   # 🔥 requires approval in GitHub
 
     steps:
       - name: Checkout
