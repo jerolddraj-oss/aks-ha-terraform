@@ -78,6 +78,8 @@ module "aks_us" {
   subnet_id           = module.hub.subnet_id
   log_analytics_id    = azurerm_log_analytics_workspace.law.id
   resource_group_name = azurerm_resource_group.rg.name
+
+  vm_size = "Standard_DC2s_v3"   # ✅ East US (your subscription allows DC-series)
 }
 
 module "aks_asia" {
@@ -87,6 +89,8 @@ module "aks_asia" {
   subnet_id           = module.asia.subnet_id
   log_analytics_id    = azurerm_log_analytics_workspace.law.id
   resource_group_name = azurerm_resource_group.rg.name
+
+  vm_size = "Standard_B2s_v2"   # ✅ Asia
 }
 
 module "aks_au" {
@@ -96,4 +100,6 @@ module "aks_au" {
   subnet_id           = module.au.subnet_id
   log_analytics_id    = azurerm_log_analytics_workspace.law.id
   resource_group_name = azurerm_resource_group.rg.name
+
+  vm_size = "Standard_B2s_v2"   # ✅ Australia
 }
