@@ -19,6 +19,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # ✅ ADD THIS
+      - name: Register Azure Providers
+        run: |
+          az provider register --namespace Microsoft.ContainerService
+          az provider register --namespace Microsoft.Network
+          az provider register --namespace Microsoft.Compute
+
       # ✅ FIX: Export ARM variables for Terraform
       - name: Export ARM Credentials
         run: |
