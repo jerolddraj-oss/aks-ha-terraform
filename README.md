@@ -4,4 +4,4 @@
 ./scripts/deploy.sh
 
 ## Destroy
-terraform destroy
+terraform destroy# aks-ha-terraform
