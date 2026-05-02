@@ -17,18 +17,25 @@ resource "azurerm_kubernetes_cluster" "aks" {
     type = "SystemAssigned"
   }
 
-  # ✅ NEW (replaces role_based_access_control block)
+  # ✅ RBAC (v3 syntax)
   role_based_access_control_enabled = true
 
-  # ✅ NEW (replaces addon_profile.oms_agent)
+  # ✅ FIX 1: OIDC must be enabled (Azure default)
+  oidc_issuer_enabled = true
+
+  # ✅ Monitoring
   oms_agent {
     log_analytics_workspace_id = var.log_analytics_id
   }
 
-  # ✅ NEW (replaces addon_profile.azure_policy)
+  # ✅ Azure Policy
   azure_policy_enabled = true
 
+  # ✅ FIX 2: Avoid CIDR overlap with VNet
   network_profile {
     network_plugin = "azure"
+
+    service_cidr   = "10.100.0.0/16"
+    dns_service_ip = "10.100.0.10"
   }
 }
