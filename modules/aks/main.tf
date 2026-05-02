@@ -7,30 +7,26 @@ resource "azurerm_kubernetes_cluster" "aks" {
   kubernetes_version = null
 
   default_node_pool {
-    name           = "system"
-    node_count     = 1
-    vm_size        = "Standard_DS2_v2"
-    vnet_subnet_id = var.subnet_id
+    name            = "system"
+    node_count      = 1
+    vm_size         = "Standard_DS2_v2"
+    vnet_subnet_id  = var.subnet_id
   }
 
   identity {
     type = "SystemAssigned"
   }
 
-  role_based_access_control {
-    enabled = true
+  # ✅ NEW (replaces role_based_access_control block)
+  role_based_access_control_enabled = true
+
+  # ✅ NEW (replaces addon_profile.oms_agent)
+  oms_agent {
+    log_analytics_workspace_id = var.log_analytics_id
   }
 
-  addon_profile {
-    oms_agent {
-      enabled                    = true
-      log_analytics_workspace_id = var.log_analytics_id
-    }
-
-    azure_policy {
-      enabled = true
-    }
-  }
+  # ✅ NEW (replaces addon_profile.azure_policy)
+  azure_policy_enabled = true
 
   network_profile {
     network_plugin = "azure"
