@@ -26,10 +26,20 @@ jobs:
           terraform_version: 0.13.7
 
       - name: Terraform Init
+<<<<<<< HEAD
         run: terraform init
+=======
+        run: |
+        terraform init \
+        -backend-config="key=aks-ha-dev.tfstate"
+>>>>>>> 659b9dc (fix: backend tfstate config for terraform)
 
       - name: Select Workspace
         run: terraform workspace select dev || terraform workspace new dev
 
       - name: Terraform Apply
+<<<<<<< HEAD
         run: terraform apply -auto-approve -var-file=env/dev.tfvars
+=======
+        run: terraform apply -auto-approve -var-file=env/dev.tfvars
+>>>>>>> 659b9dc (fix: backend tfstate config for terraform)
